@@ -1,4 +1,4 @@
-﻿#
+#
 # Author: DanSi
 # Date: 2021-12-18 Version: 1.0.0.0 beta
 # 
@@ -38,7 +38,9 @@ $ACT_FILE_LOG4J_JNDI_MANAGER  = "*core/net/JndiManager.class"
 
 $IS_LOG4J_SAFE_2_15_0  = [System.Text.Encoding]::Default.GetBytes("Invalid JNDI URI - {}")
 $IS_LOG4J_SAFE_2_16_0  = [System.Text.Encoding]::Default.GetBytes("log4j2.enableJndi")
+$IS_LOG4J_SAFE_2_17_0  = [System.Text.Encoding]::Default.GetBytes("JNDI must be enabled by setting log4j2.enableJndiLookup=true")
 $IS_LOG4J_NSAFE_2_12_2 = [System.Text.Encoding]::Default.GetBytes("Error looking up JNDI resource [{}].")
+
 
 function Prompt-YesNo($title, $question, $default=0){
     $choices = New-Object Collections.ObjectModel.Collection[Management.Automation.Host.ChoiceDescription]
@@ -120,9 +122,13 @@ function Log4J-Jar(){
     
     $isLog4J_2_12_2_override = $false
     $isLog4J_2_12_2 = $false
+    $isLog4J_2_17 = $false
     if ($hasJndiLookup){
-        $isLog4J_2_12_2_override = (ZipArchiveEntry_ContainsBytes -ZipEntry $hasJndiLookup -BytePattern $IS_LOG4J_NSAFE_2_12_2)
-        $isLog4J_2_12_2 = -not $isLog4J_2_12_2_override
+        $isLog4J_2_17 = (ZipArchiveEntry_ContainsBytes -ZipEntry $hasJndiLookup -BytePattern $IS_LOG4J_SAFE_2_17_0)
+        if (-not $isLog4J_2_17){
+            $isLog4J_2_12_2_override = (ZipArchiveEntry_ContainsBytes -ZipEntry $hasJndiLookup -BytePattern $IS_LOG4J_NSAFE_2_12_2)
+            $isLog4J_2_12_2 = -not $isLog4J_2_12_2_override
+        }
     }
 
     $isLog4J_2_15_override = $false
@@ -139,7 +145,7 @@ function Log4J-Jar(){
 
     
     $isSafe = $isLog4J_2x -and $hasJndiLookup -and $isLog4J_2_10 -and $hasJndiManager -and ($isLog4J_2_15 -or $isLog4J_2_12_2)
-    $isSafe = $isSafe -or $isLog4J_2_16
+    $isSafe = $isSafe -or $isLog4J_2_17
 
     $zipFile.Dispose()
 
@@ -161,7 +167,8 @@ function Log4J-Jar(){
         # wenn kein Autopatch
         Write-Verbose "found log4J in $($JARfile.FullName)"
         $Log4J_Version = "unknown"
-        if     ($isLog4J_2_16)  { $Log4J_Version = "2.16" }
+        if     ($isLog4J_2_17)  { $Log4J_Version = "2.17" }
+        elseif ($isLog4J_2_16)  { $Log4J_Version = "2.16" }
         elseif ($isLog4J_2_15)  { $Log4J_Version = "2.15" }
         elseif ($isLog4J_2_12_2){ $Log4J_Version = "2.12.2" }
         elseif ($isLog4J_2_10)  { $Log4J_Version = "2.10 - 2.15" }
@@ -177,6 +184,7 @@ function Log4J-Jar(){
             Log4J2_12_2 = $isLog4J_2_12_2
             Log4J2_15 = $isLog4J_2_15
             Log4J2_16 = $isLog4J_2_16
+            Log4J2_17 = $isLog4J_2_17
             Log4J_Version = $Log4J_Version
             JndiLookup = $hasJndiLookup
             JndiManager = $hasJndiManager
