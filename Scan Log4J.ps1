@@ -177,11 +177,12 @@ $Log4J_CVE_2021_45105 = @(
 
 
 function Get-Log4JVersion_FromHashCombination($HashTable,$HashPattern){
-    $all_possible_versions = ($HashTable | ?{ $_.h -eq $HashPattern } | %{ $_.v }) #-join ", "
+    $all_possible_versions = ($HashTable | ?{ $_.h -like $HashPattern } | %{ $_.v }) #-join ", "
     if ($all_possible_versions.count -gt 1){ return "$($all_possible_versions[0]) - $($all_possible_versions[-1])" }
     else                                   { return $all_possible_versions }
 }
 function Get-HashCombination-FromJndi-Hashes($LoggerHash, $JndiLookupHash,$JndiManagerHash){
+    if (-not $LoggerHash){ $LoggerHash = "*" }
     return $LoggerHash, $JndiLookupHash,$JndiManagerHash -join "-"
 }
                         
@@ -282,11 +283,12 @@ function Log4J-Jar(){
     # Detect Log4J
     $hasLog4J       = $zipFile.Entries | ?{ $_.FullName -match $Log4J_detect }
     $hasloggerClass = $zipFile.Entries | ?{ $_.FullName -like  $Log4J_LoggerClass }
+    if ($hasloggerClass -and $hasloggerClass.Count -gt 1){ $hasloggerClass=$null; Write-Warning "more then one Logger.class found!" }
     
     if ($hasLog4J){
 
-        $hasJndiLookup  = $zipFile.Entries | ?{ $_.FullName -match $Log4J_JndiLookup  }
-        $hasJndiManager = $zipFile.Entries | ?{ $_.FullName -match $Log4J_JndiManager }
+        $hasJndiLookup  = $zipFile.Entries | ?{ $_.FullName -match $Log4J_JndiLookup  } | Sort-Object LastWriteTime | Select-Object -First 1 # if more then one file, use oldest
+        $hasJndiManager = $zipFile.Entries | ?{ $_.FullName -match $Log4J_JndiManager } | Sort-Object LastWriteTime | Select-Object -First 1 # if more then one file, use oldest
 
         $JndiLookupHash  = $null
         $JndiManagerHash = $null
@@ -323,7 +325,7 @@ function Log4J-Jar(){
             Log4J_Version = $Log4J_Version
             JndiLookup = $hasJndiLookup
             JndiManager = $hasJndiManager
-            LoggerHash = $loggerClassHash
+            LoggerClass = $hasloggerClass
             JndiHashCombination = $JndiHashCombination
             CVE_2021_44228 = -not -not $CVE_2021_44228
             CVE_2021_45105 = -not -not $CVE_2021_45105
