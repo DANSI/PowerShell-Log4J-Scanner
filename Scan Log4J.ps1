@@ -1,6 +1,6 @@
 #
 # Author: DanSi
-# Date: 2021-12-20 Version: 1.1.0.0 beta
+# Date: 2021-12-20 Version: 1.1.0.1 beta
 # 
 # Skript: Finds Log4J files and try to find Version of it
 #         It can also use "Workaround 3 from https://logging.apache.org/log4j/2.x/security.html
@@ -19,160 +19,160 @@ Add-Type -Assembly 'System.IO.Compression.FileSystem'
 # global Log4J files in jar
 $Log4J_detect     = "^org/(apache/log4j/DailyRollingFileAppender.class|apache/logging/log4j/core/Logger.class)" # global find Log4J
 $Log4J_JndiLookup = "^org/apache/logging/log4j/core/lookup/JndiLookup.class" # JndiLookup.class
-$Log4J_JndiManager= "^org/apache/logging/log4j/core/net/JndiManager.class"    # JndiManager.class<
+$Log4J_JndiManager= "^org/apache/logging/log4j/core/net/JndiManager.class"   # JndiManager.class
+$Log4J_LoggerClass= "*/Logger.class"                                         # Logger.class
 
 # latest SAFE version
 $Log4J_SAFE_Hashes = @(
-                            @{h="DDF868BC458A7732EC3E63673A331D04-102CAC5B7726457244AF1F44E54FF468" ;v="2.12.2"    }, # latest SAFE version for Java 7 - Log4J 2.12.2
-                            @{h="719B34335646F58D0CA2A9B5CC7712A3-3DC5CF97546007BE53B2F3D44028FA58" ;v="2.17.0"    }  # latest SAFE version            - Log4J 2.17.0
+                            @{h="BB3CB995A7BFADB536D2B491BAF4F9C4-DDF868BC458A7732EC3E63673A331D04-102CAC5B7726457244AF1F44E54FF468" ;v="2.12.2"    }, # latest SAFE Version for Java 7
+                            @{h="8AF5B1FCE5CF9684375ACC3B298199B4-719B34335646F58D0CA2A9B5CC7712A3-3DC5CF97546007BE53B2F3D44028FA58" ;v="2.17.0"    }  # latest SAFE Version
                      )
 
 # Hash Version combinations from JndiLookup.class and JndiManager.class
 $Log4J_Version_Hashes = @(
-                            @{h="-"                                                                 ;v="1.2.9"     },
-                            @{h="-"                                                                 ;v="1.2.11"    },
-                            @{h="-"                                                                 ;v="1.2.12"    },
-                            @{h="-"                                                                 ;v="1.3-alpha7"},
-                            @{h="-"                                                                 ;v="1.2.13"    },
-                            @{h="-"                                                                 ;v="1.3-alpha8"},
-                            @{h="-"                                                                 ;v="1.3-alpha8"},
-                            @{h="-"                                                                 ;v="1.2.14"    },
-                            @{h="-"                                                                 ;v="1.2.15"    },
-                            @{h="-"                                                                 ;v="1.2.16"    },
-                            @{h="-"                                                                 ;v="1.2.17"    },
-                            @{h="-"                                                                 ;v="2.0-alpha1"},
-                            @{h="-"                                                                 ;v="2.0-alpha2"},
-                            @{h="-"                                                                 ;v="2.0-beta1" },
-                            @{h="-"                                                                 ;v="2.0-beta2" },
-                            @{h="-"                                                                 ;v="2.0-beta3" },
-                            @{h="-"                                                                 ;v="2.0-beta4" },
-                            @{h="-"                                                                 ;v="2.0-beta5" },
-                            @{h="-"                                                                 ;v="2.0-beta6" },
-                            @{h="-"                                                                 ;v="2.0-beta8" },
-                            @{h="662118846C452C4973ECA1057859AD61-"                                 ;v="2.0-beta9" },
-                            @{h="1DAF21D95A208CFCE994704824F46FAE-"                                 ;v="2.0"       },
-                            @{h="62C82AD7C1EC273A683DE928C93ABBE9-"                                 ;v="2.0"       },
-                            @{h="2365C12B4A7C5FA5D7903DD90CA9E463-"                                 ;v="2.0.1"     },
-                            @{h="5C727238E74FFAC28315C36DF27EF7CC-"                                 ;v="2.0.2"     },
-                            @{h="8EDEDBB1646C1A4DD6CDB93D9A01F43C-6B15F42C333AC39ABACFEEEB18852A44" ;v="2.1"       },
-                            @{h="8EDEDBB1646C1A4DD6CDB93D9A01F43C-6B15F42C333AC39ABACFEEEB18852A44" ;v="2.2"       },
-                            @{h="8EDEDBB1646C1A4DD6CDB93D9A01F43C-6B15F42C333AC39ABACFEEEB18852A44" ;v="2.3"       },
-                            @{h="DA195A29E34E02E9E4C6663CE0B8F243-8B2260B1CCE64144F6310876F94B1638" ;v="2.4"       },
-                            @{h="DA195A29E34E02E9E4C6663CE0B8F243-8B2260B1CCE64144F6310876F94B1638" ;v="2.4.1"     },
-                            @{h="DA195A29E34E02E9E4C6663CE0B8F243-8B2260B1CCE64144F6310876F94B1638" ;v="2.5"       },
-                            @{h="766BF6B755ADEE673838FDF968C15079-3BD9F41B89CE4FE8CCBF73E43195A5CE" ;v="2.6"       },
-                            @{h="766BF6B755ADEE673838FDF968C15079-3BD9F41B89CE4FE8CCBF73E43195A5CE" ;v="2.6.1"     },
-                            @{h="766BF6B755ADEE673838FDF968C15079-3BD9F41B89CE4FE8CCBF73E43195A5CE" ;v="2.6.2"     },
-                            @{h="4618C4BEA52A4E2E2693B7D91B019C71-415C13E7C8505FB056D540EAC29B72FA" ;v="2.7"       },
-                            @{h="FE963DEFC63D2DF86D3D4E2F160939AB-415C13E7C8505FB056D540EAC29B72FA" ;v="2.8"       },
-                            @{h="FE963DEFC63D2DF86D3D4E2F160939AB-415C13E7C8505FB056D540EAC29B72FA" ;v="2.8.1"     },
-                            @{h="641FD7AE76E95B35F02C55FFBF430E6B-A193703904A3F18FB3C90A877EB5C8A7" ;v="2.8.2"     },
-                            @{h="88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.9.0"     },
-                            @{h="88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.9.1"     },
-                            @{h="88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.10.0"    },
-                            @{h="88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.11.0"    },
-                            @{h="88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.11.1"    },
-                            @{h="88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.11.2"    },
-                            @{h="4CB3A0271F77C02FD2DE3144A729AB70-5824711D6C68162EB535CC4DBF7485D3" ;v="2.12.0"    },
-                            @{h="4CB3A0271F77C02FD2DE3144A729AB70-5824711D6C68162EB535CC4DBF7485D3" ;v="2.12.1"    },
-                            @{h="7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.0"    },
-                            @{h="7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.1"    },
-                            @{h="7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.2"    },
-                            @{h="7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.3"    },
-                            @{h="737B430FAC6CAEF7C485C9C47F0F9104-F1D630C48928096A484E4B95CCB162A0" ;v="2.14.0"    },
-                            @{h="737B430FAC6CAEF7C485C9C47F0F9104-F1D630C48928096A484E4B95CCB162A0" ;v="2.14.1"    },
-                            @{h="737B430FAC6CAEF7C485C9C47F0F9104-5D253E53FA993E122FF012221AA49EC3" ;v="2.15.0"    },
-                            @{h="737B430FAC6CAEF7C485C9C47F0F9104-BA1CF8F81E7B31C709768561BA8AB558" ;v="2.16.0"    },
-
-                            @{h="DDF868BC458A7732EC3E63673A331D04-102CAC5B7726457244AF1F44E54FF468" ;v="2.12.2"    }, #fixed CVE-2021-(44228, 45046)        for Java 7
-                            @{h="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" ;v="2.12.3"    }, #fixed CVE-2021-(44228, 45046, 45105) for Java 7
-                            @{h="719B34335646F58D0CA2A9B5CC7712A3-3DC5CF97546007BE53B2F3D44028FA58" ;v="2.17.0"    }, #fixed CVE-2021-(44228, 45046, 45105)
-                            
-                            @{h="D47E57DE48AC28AF9CD9FCF535781A97-71E7603A1F55254E20419FCD8AFA7AD7" ;v="3.0.0-SNAPSHOT"} # 3.0.0 SNAPSHOT
+                            @{h="BF2352B5948C97CFB999D283100EDF3D--"                                                                 ;v="1.2.9"     },
+                            @{h="3FDFE3A60814356965121D4665A4DB94--"                                                                 ;v="1.2.11"    },
+                            @{h="E5F375698535B63074CCD328937C80D8--"                                                                 ;v="1.2.12"    },
+                            @{h="A7F58C4D565C0AEEDB83CFD6DDFBB136--"                                                                 ;v="1.3-alpha7"},
+                            @{h="D3B8F9B48948DDE44D68A7C712C0B747--"                                                                 ;v="1.2.13"    },
+                            @{h="6AE6FC8BF1398FDF615ABC6DF02C884E--"                                                                 ;v="1.3-alpha8"},
+                            @{h="D3B8F9B48948DDE44D68A7C712C0B747--"                                                                 ;v="1.2.14"    },
+                            @{h="A26BE8B0712743831816777A73F5CA1F--"                                                                 ;v="1.2.15"    },
+                            @{h="370945D3C458D3826294EFF5EA0A10CB--"                                                                 ;v="1.2.16"    },
+                            @{h="D09731A6DA1DE7E0969F5FE070D6AD7E--"                                                                 ;v="1.2.17"    },
+                            @{h="68A14EC3F9AA9B9F97DBCC4964577ADB--"                                                                 ;v="2.0-alpha1"},
+                            @{h="68A14EC3F9AA9B9F97DBCC4964577ADB--"                                                                 ;v="2.0-alpha2"},
+                            @{h="C71F5A1A11D92E365368A6C0D4C26645--"                                                                 ;v="2.0-beta1" },
+                            @{h="D98CACF9E93F6F56FBEDAC93CDE5EEBA--"                                                                 ;v="2.0-beta2" },
+                            @{h="5D03C5D9BD4AAD857B4E8504837AF21D--"                                                                 ;v="2.0-beta3" },
+                            @{h="BD7FF609C3D7227124BAE6B1CD6A7862--"                                                                 ;v="2.0-beta4" },
+                            @{h="A4D21FD78AD33B4DC0E15F01BD5231E5--"                                                                 ;v="2.0-beta5" },
+                            @{h="39926B25F7F452F5DAB9C79A0A0B2D71--"                                                                 ;v="2.0-beta6" },
+                            @{h="39926B25F7F452F5DAB9C79A0A0B2D71--"                                                                 ;v="2.0-beta8" },
+                            @{h="941648ACE2BB9AECED97B2463CF5AACE-662118846C452C4973ECA1057859AD61-"                                 ;v="2.0-beta9" },
+                            @{h="F2E00268D425F7BFF247EA521B29BCCC-1DAF21D95A208CFCE994704824F46FAE-"                                 ;v="2.0"       },
+                            @{h="F2E00268D425F7BFF247EA521B29BCCC-62C82AD7C1EC273A683DE928C93ABBE9-"                                 ;v="2.0"       },
+                            @{h="F2E00268D425F7BFF247EA521B29BCCC-2365C12B4A7C5FA5D7903DD90CA9E463-"                                 ;v="2.0.1"     },
+                            @{h="55139012C8B68C26C1E9BEE4160CE423-5C727238E74FFAC28315C36DF27EF7CC-"                                 ;v="2.0.2"     },
+                            @{h="994231C0169FCA44859D44EE9CD0A11E-8EDEDBB1646C1A4DD6CDB93D9A01F43C-6B15F42C333AC39ABACFEEEB18852A44" ;v="2.1"       },
+                            @{h="617D9A49203229FDC122F527203A176B-8EDEDBB1646C1A4DD6CDB93D9A01F43C-6B15F42C333AC39ABACFEEEB18852A44" ;v="2.2"       },
+                            @{h="AE6627617D1AC8B2F9FCB9688AA9817E-8EDEDBB1646C1A4DD6CDB93D9A01F43C-6B15F42C333AC39ABACFEEEB18852A44" ;v="2.3"       },
+                            @{h="C9BD7F62BF269D6E89806D2F52144842-DA195A29E34E02E9E4C6663CE0B8F243-8B2260B1CCE64144F6310876F94B1638" ;v="2.4"       },
+                            @{h="B669D01F8ACD38F3C1DA286DCE55E251-DA195A29E34E02E9E4C6663CE0B8F243-8B2260B1CCE64144F6310876F94B1638" ;v="2.4.1"     },
+                            @{h="EE293E766DEF37553600803C266F5E9E-DA195A29E34E02E9E4C6663CE0B8F243-8B2260B1CCE64144F6310876F94B1638" ;v="2.5"       },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-766BF6B755ADEE673838FDF968C15079-3BD9F41B89CE4FE8CCBF73E43195A5CE" ;v="2.6"       },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-766BF6B755ADEE673838FDF968C15079-3BD9F41B89CE4FE8CCBF73E43195A5CE" ;v="2.6.1"     },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-766BF6B755ADEE673838FDF968C15079-3BD9F41B89CE4FE8CCBF73E43195A5CE" ;v="2.6.2"     },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-4618C4BEA52A4E2E2693B7D91B019C71-415C13E7C8505FB056D540EAC29B72FA" ;v="2.7"       },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-FE963DEFC63D2DF86D3D4E2F160939AB-415C13E7C8505FB056D540EAC29B72FA" ;v="2.8"       },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-FE963DEFC63D2DF86D3D4E2F160939AB-415C13E7C8505FB056D540EAC29B72FA" ;v="2.8.1"     },
+                            @{h="7156590920AEF6FA871B602B13B8D8F4-641FD7AE76E95B35F02C55FFBF430E6B-A193703904A3F18FB3C90A877EB5C8A7" ;v="2.8.2"     },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.9.0"     },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.9.1"     },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.10.0"    },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.11.0"    },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.11.1"    },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.11.2"    },
+                            @{h="7156590920AEF6FA871B602B13B8D8F4-4CB3A0271F77C02FD2DE3144A729AB70-5824711D6C68162EB535CC4DBF7485D3" ;v="2.12.0"    },
+                            @{h="BB3CB995A7BFADB536D2B491BAF4F9C4-4CB3A0271F77C02FD2DE3144A729AB70-5824711D6C68162EB535CC4DBF7485D3" ;v="2.12.1"    },
+                            @{h="1AC815D89B2D897441B6C62C3982C044-7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.0"    },
+                            @{h="1AC815D89B2D897441B6C62C3982C044-7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.1"    },
+                            @{h="1AC815D89B2D897441B6C62C3982C044-7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.2"    },
+                            @{h="1AC815D89B2D897441B6C62C3982C044-7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.3"    },
+                            @{h="8AF5B1FCE5CF9684375ACC3B298199B4-737B430FAC6CAEF7C485C9C47F0F9104-F1D630C48928096A484E4B95CCB162A0" ;v="2.14.0"    },
+                            @{h="8AF5B1FCE5CF9684375ACC3B298199B4-737B430FAC6CAEF7C485C9C47F0F9104-F1D630C48928096A484E4B95CCB162A0" ;v="2.14.1"    },
+                            @{h="8AF5B1FCE5CF9684375ACC3B298199B4-737B430FAC6CAEF7C485C9C47F0F9104-5D253E53FA993E122FF012221AA49EC3" ;v="2.15.0"    }, #fixed CVE-2021-44228
+                            @{h="8AF5B1FCE5CF9684375ACC3B298199B4-737B430FAC6CAEF7C485C9C47F0F9104-BA1CF8F81E7B31C709768561BA8AB558" ;v="2.16.0"    }, #fixed CVE-2021-45046
+							
+							@{h="BB3CB995A7BFADB536D2B491BAF4F9C4-DDF868BC458A7732EC3E63673A331D04-102CAC5B7726457244AF1F44E54FF468" ;v="2.12.2"    }, #fixed CVE-2021-(44228, 45046) for Java 7
+                            @{h="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" ;v="2.12.3"    }, #fixed CVE-2021-45105          for Java 7
+                            @{h="8AF5B1FCE5CF9684375ACC3B298199B4-719B34335646F58D0CA2A9B5CC7712A3-3DC5CF97546007BE53B2F3D44028FA58" ;v="2.17.0"    }  #fixed CVE-2021-45105
 
                          )
 
 $Log4J_CVE_2021_44228__CVE_2021_45046 = @(
-                            @{h="662118846C452C4973ECA1057859AD61-"                                 ;v="2.0-beta9" },
-                            @{h="1DAF21D95A208CFCE994704824F46FAE-"                                 ;v="2.0"       },
-                            @{h="62C82AD7C1EC273A683DE928C93ABBE9-"                                 ;v="2.0"       },
-                            @{h="2365C12B4A7C5FA5D7903DD90CA9E463-"                                 ;v="2.0.1"     },
-                            @{h="5C727238E74FFAC28315C36DF27EF7CC-"                                 ;v="2.0.2"     },
-                            @{h="8EDEDBB1646C1A4DD6CDB93D9A01F43C-6B15F42C333AC39ABACFEEEB18852A44" ;v="2.1"       },
-                            @{h="8EDEDBB1646C1A4DD6CDB93D9A01F43C-6B15F42C333AC39ABACFEEEB18852A44" ;v="2.2"       },
-                            @{h="8EDEDBB1646C1A4DD6CDB93D9A01F43C-6B15F42C333AC39ABACFEEEB18852A44" ;v="2.3"       },
-                            @{h="DA195A29E34E02E9E4C6663CE0B8F243-8B2260B1CCE64144F6310876F94B1638" ;v="2.4"       },
-                            @{h="DA195A29E34E02E9E4C6663CE0B8F243-8B2260B1CCE64144F6310876F94B1638" ;v="2.4.1"     },
-                            @{h="DA195A29E34E02E9E4C6663CE0B8F243-8B2260B1CCE64144F6310876F94B1638" ;v="2.5"       },
-                            @{h="766BF6B755ADEE673838FDF968C15079-3BD9F41B89CE4FE8CCBF73E43195A5CE" ;v="2.6"       },
-                            @{h="766BF6B755ADEE673838FDF968C15079-3BD9F41B89CE4FE8CCBF73E43195A5CE" ;v="2.6.1"     },
-                            @{h="766BF6B755ADEE673838FDF968C15079-3BD9F41B89CE4FE8CCBF73E43195A5CE" ;v="2.6.2"     },
-                            @{h="4618C4BEA52A4E2E2693B7D91B019C71-415C13E7C8505FB056D540EAC29B72FA" ;v="2.7"       },
-                            @{h="FE963DEFC63D2DF86D3D4E2F160939AB-415C13E7C8505FB056D540EAC29B72FA" ;v="2.8"       },
-                            @{h="FE963DEFC63D2DF86D3D4E2F160939AB-415C13E7C8505FB056D540EAC29B72FA" ;v="2.8.1"     },
-                            @{h="641FD7AE76E95B35F02C55FFBF430E6B-A193703904A3F18FB3C90A877EB5C8A7" ;v="2.8.2"     },
-                            @{h="88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.9.0"     },
-                            @{h="88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.9.1"     },
-                            @{h="88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.10.0"    },
-                            @{h="88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.11.0"    },
-                            @{h="88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.11.1"    },
-                            @{h="88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.11.2"    },
-                            @{h="4CB3A0271F77C02FD2DE3144A729AB70-5824711D6C68162EB535CC4DBF7485D3" ;v="2.12.0"    },
-                            @{h="4CB3A0271F77C02FD2DE3144A729AB70-5824711D6C68162EB535CC4DBF7485D3" ;v="2.12.1"    },
-                            @{h="7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.0"    },
-                            @{h="7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.1"    },
-                            @{h="7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.2"    },
-                            @{h="7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.3"    },
-                            @{h="737B430FAC6CAEF7C485C9C47F0F9104-F1D630C48928096A484E4B95CCB162A0" ;v="2.14.0"    },
-                            @{h="737B430FAC6CAEF7C485C9C47F0F9104-F1D630C48928096A484E4B95CCB162A0" ;v="2.14.1"    },
-                            @{h="737B430FAC6CAEF7C485C9C47F0F9104-5D253E53FA993E122FF012221AA49EC3" ;v="2.15.0"    }
+                            @{h="941648ACE2BB9AECED97B2463CF5AACE-662118846C452C4973ECA1057859AD61-"                                 ;v="2.0-beta9" },
+                            @{h="F2E00268D425F7BFF247EA521B29BCCC-1DAF21D95A208CFCE994704824F46FAE-"                                 ;v="2.0"       },
+                            @{h="F2E00268D425F7BFF247EA521B29BCCC-62C82AD7C1EC273A683DE928C93ABBE9-"                                 ;v="2.0"       },
+                            @{h="F2E00268D425F7BFF247EA521B29BCCC-2365C12B4A7C5FA5D7903DD90CA9E463-"                                 ;v="2.0.1"     },
+                            @{h="55139012C8B68C26C1E9BEE4160CE423-5C727238E74FFAC28315C36DF27EF7CC-"                                 ;v="2.0.2"     },
+                            @{h="994231C0169FCA44859D44EE9CD0A11E-8EDEDBB1646C1A4DD6CDB93D9A01F43C-6B15F42C333AC39ABACFEEEB18852A44" ;v="2.1"       },
+                            @{h="617D9A49203229FDC122F527203A176B-8EDEDBB1646C1A4DD6CDB93D9A01F43C-6B15F42C333AC39ABACFEEEB18852A44" ;v="2.2"       },
+                            @{h="AE6627617D1AC8B2F9FCB9688AA9817E-8EDEDBB1646C1A4DD6CDB93D9A01F43C-6B15F42C333AC39ABACFEEEB18852A44" ;v="2.3"       },
+                            @{h="C9BD7F62BF269D6E89806D2F52144842-DA195A29E34E02E9E4C6663CE0B8F243-8B2260B1CCE64144F6310876F94B1638" ;v="2.4"       },
+                            @{h="B669D01F8ACD38F3C1DA286DCE55E251-DA195A29E34E02E9E4C6663CE0B8F243-8B2260B1CCE64144F6310876F94B1638" ;v="2.4.1"     },
+                            @{h="EE293E766DEF37553600803C266F5E9E-DA195A29E34E02E9E4C6663CE0B8F243-8B2260B1CCE64144F6310876F94B1638" ;v="2.5"       },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-766BF6B755ADEE673838FDF968C15079-3BD9F41B89CE4FE8CCBF73E43195A5CE" ;v="2.6"       },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-766BF6B755ADEE673838FDF968C15079-3BD9F41B89CE4FE8CCBF73E43195A5CE" ;v="2.6.1"     },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-766BF6B755ADEE673838FDF968C15079-3BD9F41B89CE4FE8CCBF73E43195A5CE" ;v="2.6.2"     },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-4618C4BEA52A4E2E2693B7D91B019C71-415C13E7C8505FB056D540EAC29B72FA" ;v="2.7"       },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-FE963DEFC63D2DF86D3D4E2F160939AB-415C13E7C8505FB056D540EAC29B72FA" ;v="2.8"       },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-FE963DEFC63D2DF86D3D4E2F160939AB-415C13E7C8505FB056D540EAC29B72FA" ;v="2.8.1"     },
+                            @{h="7156590920AEF6FA871B602B13B8D8F4-641FD7AE76E95B35F02C55FFBF430E6B-A193703904A3F18FB3C90A877EB5C8A7" ;v="2.8.2"     },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.9.0"     },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.9.1"     },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.10.0"    },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.11.0"    },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.11.1"    },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.11.2"    },
+                            @{h="7156590920AEF6FA871B602B13B8D8F4-4CB3A0271F77C02FD2DE3144A729AB70-5824711D6C68162EB535CC4DBF7485D3" ;v="2.12.0"    },
+                            @{h="BB3CB995A7BFADB536D2B491BAF4F9C4-4CB3A0271F77C02FD2DE3144A729AB70-5824711D6C68162EB535CC4DBF7485D3" ;v="2.12.1"    },
+                            @{h="1AC815D89B2D897441B6C62C3982C044-7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.0"    },
+                            @{h="1AC815D89B2D897441B6C62C3982C044-7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.1"    },
+                            @{h="1AC815D89B2D897441B6C62C3982C044-7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.2"    },
+                            @{h="1AC815D89B2D897441B6C62C3982C044-7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.3"    },
+                            @{h="8AF5B1FCE5CF9684375ACC3B298199B4-737B430FAC6CAEF7C485C9C47F0F9104-F1D630C48928096A484E4B95CCB162A0" ;v="2.14.0"    },
+                            @{h="8AF5B1FCE5CF9684375ACC3B298199B4-737B430FAC6CAEF7C485C9C47F0F9104-F1D630C48928096A484E4B95CCB162A0" ;v="2.14.1"    },
+                            @{h="8AF5B1FCE5CF9684375ACC3B298199B4-737B430FAC6CAEF7C485C9C47F0F9104-5D253E53FA993E122FF012221AA49EC3" ;v="2.15.0"    } #fixed CVE-2021-44228
+                            
                          )
 
 $Log4J_CVE_2021_45105 = @(
-                            @{h="-"                                                                 ;v="2.0-alpha1"},
-                            @{h="-"                                                                 ;v="2.0-alpha2"},
-                            @{h="-"                                                                 ;v="2.0-beta1" },
-                            @{h="-"                                                                 ;v="2.0-beta2" },
-                            @{h="-"                                                                 ;v="2.0-beta3" },
-                            @{h="-"                                                                 ;v="2.0-beta4" },
-                            @{h="-"                                                                 ;v="2.0-beta5" },
-                            @{h="-"                                                                 ;v="2.0-beta6" },
-                            @{h="-"                                                                 ;v="2.0-beta8" },
-                            @{h="662118846C452C4973ECA1057859AD61-"                                 ;v="2.0-beta9" },
-                            @{h="1DAF21D95A208CFCE994704824F46FAE-"                                 ;v="2.0"       },
-                            @{h="62C82AD7C1EC273A683DE928C93ABBE9-"                                 ;v="2.0"       },
-                            @{h="2365C12B4A7C5FA5D7903DD90CA9E463-"                                 ;v="2.0.1"     },
-                            @{h="5C727238E74FFAC28315C36DF27EF7CC-"                                 ;v="2.0.2"     },
-                            @{h="8EDEDBB1646C1A4DD6CDB93D9A01F43C-6B15F42C333AC39ABACFEEEB18852A44" ;v="2.1"       },
-                            @{h="8EDEDBB1646C1A4DD6CDB93D9A01F43C-6B15F42C333AC39ABACFEEEB18852A44" ;v="2.2"       },
-                            @{h="8EDEDBB1646C1A4DD6CDB93D9A01F43C-6B15F42C333AC39ABACFEEEB18852A44" ;v="2.3"       },
-                            @{h="DA195A29E34E02E9E4C6663CE0B8F243-8B2260B1CCE64144F6310876F94B1638" ;v="2.4"       },
-                            @{h="DA195A29E34E02E9E4C6663CE0B8F243-8B2260B1CCE64144F6310876F94B1638" ;v="2.4.1"     },
-                            @{h="DA195A29E34E02E9E4C6663CE0B8F243-8B2260B1CCE64144F6310876F94B1638" ;v="2.5"       },
-                            @{h="766BF6B755ADEE673838FDF968C15079-3BD9F41B89CE4FE8CCBF73E43195A5CE" ;v="2.6"       },
-                            @{h="766BF6B755ADEE673838FDF968C15079-3BD9F41B89CE4FE8CCBF73E43195A5CE" ;v="2.6.1"     },
-                            @{h="766BF6B755ADEE673838FDF968C15079-3BD9F41B89CE4FE8CCBF73E43195A5CE" ;v="2.6.2"     },
-                            @{h="4618C4BEA52A4E2E2693B7D91B019C71-415C13E7C8505FB056D540EAC29B72FA" ;v="2.7"       },
-                            @{h="FE963DEFC63D2DF86D3D4E2F160939AB-415C13E7C8505FB056D540EAC29B72FA" ;v="2.8"       },
-                            @{h="FE963DEFC63D2DF86D3D4E2F160939AB-415C13E7C8505FB056D540EAC29B72FA" ;v="2.8.1"     },
-                            @{h="641FD7AE76E95B35F02C55FFBF430E6B-A193703904A3F18FB3C90A877EB5C8A7" ;v="2.8.2"     },
-                            @{h="88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.9.0"     },
-                            @{h="88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.9.1"     },
-                            @{h="88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.10.0"    },
-                            @{h="88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.11.0"    },
-                            @{h="88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.11.1"    },
-                            @{h="88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.11.2"    },
-                            @{h="4CB3A0271F77C02FD2DE3144A729AB70-5824711D6C68162EB535CC4DBF7485D3" ;v="2.12.0"    },
-                            @{h="4CB3A0271F77C02FD2DE3144A729AB70-5824711D6C68162EB535CC4DBF7485D3" ;v="2.12.1"    },
-                            @{h="7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.0"    },
-                            @{h="7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.1"    },
-                            @{h="7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.2"    },
-                            @{h="7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.3"    },
-                            @{h="737B430FAC6CAEF7C485C9C47F0F9104-F1D630C48928096A484E4B95CCB162A0" ;v="2.14.0"    },
-                            @{h="737B430FAC6CAEF7C485C9C47F0F9104-F1D630C48928096A484E4B95CCB162A0" ;v="2.14.1"    },
-                            @{h="737B430FAC6CAEF7C485C9C47F0F9104-5D253E53FA993E122FF012221AA49EC3" ;v="2.15.0"    },
-                            @{h="737B430FAC6CAEF7C485C9C47F0F9104-BA1CF8F81E7B31C709768561BA8AB558" ;v="2.16.0"    },
-                            @{h="DDF868BC458A7732EC3E63673A331D04-102CAC5B7726457244AF1F44E54FF468" ;v="2.12.2"    }
+                            @{h="68A14EC3F9AA9B9F97DBCC4964577ADB--"                                                                 ;v="2.0-alpha1"},
+                            @{h="68A14EC3F9AA9B9F97DBCC4964577ADB--"                                                                 ;v="2.0-alpha2"},
+                            @{h="C71F5A1A11D92E365368A6C0D4C26645--"                                                                 ;v="2.0-beta1" },
+                            @{h="D98CACF9E93F6F56FBEDAC93CDE5EEBA--"                                                                 ;v="2.0-beta2" },
+                            @{h="5D03C5D9BD4AAD857B4E8504837AF21D--"                                                                 ;v="2.0-beta3" },
+                            @{h="BD7FF609C3D7227124BAE6B1CD6A7862--"                                                                 ;v="2.0-beta4" },
+                            @{h="A4D21FD78AD33B4DC0E15F01BD5231E5--"                                                                 ;v="2.0-beta5" },
+                            @{h="39926B25F7F452F5DAB9C79A0A0B2D71--"                                                                 ;v="2.0-beta6" },
+                            @{h="39926B25F7F452F5DAB9C79A0A0B2D71--"                                                                 ;v="2.0-beta8" },
+                            @{h="941648ACE2BB9AECED97B2463CF5AACE-662118846C452C4973ECA1057859AD61-"                                 ;v="2.0-beta9" },
+                            @{h="F2E00268D425F7BFF247EA521B29BCCC-1DAF21D95A208CFCE994704824F46FAE-"                                 ;v="2.0"       },
+                            @{h="F2E00268D425F7BFF247EA521B29BCCC-62C82AD7C1EC273A683DE928C93ABBE9-"                                 ;v="2.0"       },
+                            @{h="F2E00268D425F7BFF247EA521B29BCCC-2365C12B4A7C5FA5D7903DD90CA9E463-"                                 ;v="2.0.1"     },
+                            @{h="55139012C8B68C26C1E9BEE4160CE423-5C727238E74FFAC28315C36DF27EF7CC-"                                 ;v="2.0.2"     },
+                            @{h="994231C0169FCA44859D44EE9CD0A11E-8EDEDBB1646C1A4DD6CDB93D9A01F43C-6B15F42C333AC39ABACFEEEB18852A44" ;v="2.1"       },
+                            @{h="617D9A49203229FDC122F527203A176B-8EDEDBB1646C1A4DD6CDB93D9A01F43C-6B15F42C333AC39ABACFEEEB18852A44" ;v="2.2"       },
+                            @{h="AE6627617D1AC8B2F9FCB9688AA9817E-8EDEDBB1646C1A4DD6CDB93D9A01F43C-6B15F42C333AC39ABACFEEEB18852A44" ;v="2.3"       },
+                            @{h="C9BD7F62BF269D6E89806D2F52144842-DA195A29E34E02E9E4C6663CE0B8F243-8B2260B1CCE64144F6310876F94B1638" ;v="2.4"       },
+                            @{h="B669D01F8ACD38F3C1DA286DCE55E251-DA195A29E34E02E9E4C6663CE0B8F243-8B2260B1CCE64144F6310876F94B1638" ;v="2.4.1"     },
+                            @{h="EE293E766DEF37553600803C266F5E9E-DA195A29E34E02E9E4C6663CE0B8F243-8B2260B1CCE64144F6310876F94B1638" ;v="2.5"       },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-766BF6B755ADEE673838FDF968C15079-3BD9F41B89CE4FE8CCBF73E43195A5CE" ;v="2.6"       },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-766BF6B755ADEE673838FDF968C15079-3BD9F41B89CE4FE8CCBF73E43195A5CE" ;v="2.6.1"     },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-766BF6B755ADEE673838FDF968C15079-3BD9F41B89CE4FE8CCBF73E43195A5CE" ;v="2.6.2"     },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-4618C4BEA52A4E2E2693B7D91B019C71-415C13E7C8505FB056D540EAC29B72FA" ;v="2.7"       },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-FE963DEFC63D2DF86D3D4E2F160939AB-415C13E7C8505FB056D540EAC29B72FA" ;v="2.8"       },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-FE963DEFC63D2DF86D3D4E2F160939AB-415C13E7C8505FB056D540EAC29B72FA" ;v="2.8.1"     },
+                            @{h="7156590920AEF6FA871B602B13B8D8F4-641FD7AE76E95B35F02C55FFBF430E6B-A193703904A3F18FB3C90A877EB5C8A7" ;v="2.8.2"     },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.9.0"     },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.9.1"     },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.10.0"    },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.11.0"    },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.11.1"    },
+                            @{h="22E5AED68D2B75012905CB40674F7DD5-88568653545359ACE753F19A72B18208-04FDD701809D17465C17C7E603B1B202" ;v="2.11.2"    },
+                            @{h="7156590920AEF6FA871B602B13B8D8F4-4CB3A0271F77C02FD2DE3144A729AB70-5824711D6C68162EB535CC4DBF7485D3" ;v="2.12.0"    },
+                            @{h="BB3CB995A7BFADB536D2B491BAF4F9C4-4CB3A0271F77C02FD2DE3144A729AB70-5824711D6C68162EB535CC4DBF7485D3" ;v="2.12.1"    },
+                            @{h="1AC815D89B2D897441B6C62C3982C044-7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.0"    },
+                            @{h="1AC815D89B2D897441B6C62C3982C044-7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.1"    },
+                            @{h="1AC815D89B2D897441B6C62C3982C044-7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.2"    },
+                            @{h="1AC815D89B2D897441B6C62C3982C044-7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.3"    },
+                            @{h="8AF5B1FCE5CF9684375ACC3B298199B4-737B430FAC6CAEF7C485C9C47F0F9104-F1D630C48928096A484E4B95CCB162A0" ;v="2.14.0"    },
+                            @{h="8AF5B1FCE5CF9684375ACC3B298199B4-737B430FAC6CAEF7C485C9C47F0F9104-F1D630C48928096A484E4B95CCB162A0" ;v="2.14.1"    },
+                            @{h="8AF5B1FCE5CF9684375ACC3B298199B4-737B430FAC6CAEF7C485C9C47F0F9104-5D253E53FA993E122FF012221AA49EC3" ;v="2.15.0"    }, #fixed CVE-2021-44228
+                            @{h="8AF5B1FCE5CF9684375ACC3B298199B4-737B430FAC6CAEF7C485C9C47F0F9104-BA1CF8F81E7B31C709768561BA8AB558" ;v="2.16.0"    }, #fixed CVE-2021-45046
+							
+							@{h="BB3CB995A7BFADB536D2B491BAF4F9C4-DDF868BC458A7732EC3E63673A331D04-102CAC5B7726457244AF1F44E54FF468" ;v="2.12.2"    }  #fixed CVE-2021-(44228, 45046) for Java 7
                          )
 
 
@@ -181,8 +181,8 @@ function Get-Log4JVersion_FromHashCombination($HashTable,$HashPattern){
     if ($all_possible_versions.count -gt 1){ return "$($all_possible_versions[0]) - $($all_possible_versions[-1])" }
     else                                   { return $all_possible_versions }
 }
-function Get-HashCombination-FromJndi-Hashes($JndiLookupHash,$JndiManagerHash){
-    return "{0}-{1}" -f ($JndiLookupHash,$JndiManagerHash)
+function Get-HashCombination-FromJndi-Hashes($LoggerHash, $JndiLookupHash,$JndiManagerHash){
+    return $LoggerHash, $JndiLookupHash,$JndiManagerHash -join "-"
 }
                         
 function Prompt-YesNo($title, $question, $default=0){
@@ -281,6 +281,7 @@ function Log4J-Jar(){
 
     # Detect Log4J
     $hasLog4J       = $zipFile.Entries | ?{ $_.FullName -match $Log4J_detect }
+    $hasloggerClass = $zipFile.Entries | ?{ $_.FullName -like  $Log4J_LoggerClass }
     
     if ($hasLog4J){
 
@@ -289,9 +290,12 @@ function Log4J-Jar(){
 
         $JndiLookupHash  = $null
         $JndiManagerHash = $null
+        $loggerClassHash = $null
+
         if ($hasJndiLookup) { $JndiLookupHash   = GetHash_FromStream $hasJndiLookup.Open()  }
         if ($hasJndiManager){ $JndiManagerHash  = GetHash_FromStream $hasJndiManager.Open() }
-        $JndiHashCombination = Get-HashCombination-FromJndi-Hashes -JndiLookupHash $JndiLookupHash -JndiManagerHash $JndiManagerHash
+        if ($hasloggerClass){ $loggerClassHash  = GetHash_FromStream $hasloggerClass.Open() }
+        $JndiHashCombination = Get-HashCombination-FromJndi-Hashes -LoggerHash $loggerClassHash -JndiLookupHash $JndiLookupHash -JndiManagerHash $JndiManagerHash
         $Log4J_Version = Get-Log4JVersion_FromHashCombination -HashTable $Log4J_Version_Hashes -HashPattern $JndiHashCombination
     
         $isSafe = -not -not (Get-Log4JVersion_FromHashCombination -HashTable $Log4J_SAFE_Hashes -HashPattern $JndiHashCombination)
@@ -319,6 +323,7 @@ function Log4J-Jar(){
             Log4J_Version = $Log4J_Version
             JndiLookup = $hasJndiLookup
             JndiManager = $hasJndiManager
+            LoggerHash = $loggerClassHash
             JndiHashCombination = $JndiHashCombination
             CVE_2021_44228 = -not -not $CVE_2021_44228
             CVE_2021_45105 = -not -not $CVE_2021_45105
