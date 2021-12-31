@@ -10,8 +10,9 @@
 #
 #         Example use: Get-ChildItem -Path C:\ -Filter *.jar -File -Recurse | %{ Log4J-Jar -JARfile $_.FullName }
 #         Example use: Get-ChildItem -Path C:\ -Filter *.jar -File -Recurse | %{ Log4J-Jar -JARfile $_.FullName -AutoPatch }
+#         Example use: gci -Path C:\TEMP\nnn -Filter *.jar -File | %{ Log4J-Jar -JARfile $_.FullName }
 #
-#         hint: you should also look in these files for log4J: *.jar *.zip *.ear *.war *.aar
+#         hint: you should look in *.*ar files to find log4J: *.*ar *.zip (this includes *.car *.kar *.jar *.war)
 
 
 Add-Type -Assembly 'System.IO.Compression.FileSystem'
@@ -24,7 +25,8 @@ $Log4J_LoggerClass= "*/Logger.class"                                         # L
 
 # latest SAFE version
 $Log4J_SAFE_Hashes = @(
-                            #@{h="??????????????????????????????????????????????????????????????????????????????????????????????????" ;v="2.12.4"    }, # latest SAFE Version for Java 7
+                            @{h="0376B2957060008EB4C979AAB677811A-381EFF450ECFFF94026B92B0DDF05D31-A796BC9B7A227EC08E229B09FF0C1FF1" ;v="2.3.2"     }, # latest SAFE Version for Java 6
+                            @{h="BB3CB995A7BFADB536D2B491BAF4F9C4-F54D88847EBCF0E2B7C7BFE03B91B69A-909F3304825153542280D20A975D3114" ;v="2.12.4"    }, # latest SAFE Version for Java 7
                             @{h="8AF5B1FCE5CF9684375ACC3B298199B4-719B34335646F58D0CA2A9B5CC7712A3-3C3A43AF0930A658716B870E66DB1569" ;v="2.17.1"    }  # latest SAFE Version
                      )
 
@@ -58,7 +60,7 @@ $Log4J_Version_Hashes = @(
                             @{h="617D9A49203229FDC122F527203A176B-8EDEDBB1646C1A4DD6CDB93D9A01F43C-6B15F42C333AC39ABACFEEEB18852A44" ;v="2.2"       },
                             @{h="AE6627617D1AC8B2F9FCB9688AA9817E-8EDEDBB1646C1A4DD6CDB93D9A01F43C-6B15F42C333AC39ABACFEEEB18852A44" ;v="2.3"       },
                             @{h="0376B2957060008EB4C979AAB677811A-8D28B7BDF91EE2F18224CA0C17EE9442-2128ED66F0A5DBC8B5A81EC2376DFEA0" ;v="2.3.1"     },
-                            #@{h="??????????????????????????????????????????????????????????????????????????????????????????????????" ;v="2.3.2"     }, # fix for CVE-2021-44832
+                            @{h="0376B2957060008EB4C979AAB677811A-381EFF450ECFFF94026B92B0DDF05D31-A796BC9B7A227EC08E229B09FF0C1FF1" ;v="2.3.2"     }, # fix for CVE-2021-44832 - Java 6
 
                             @{h="C9BD7F62BF269D6E89806D2F52144842-DA195A29E34E02E9E4C6663CE0B8F243-8B2260B1CCE64144F6310876F94B1638" ;v="2.4"       },
                             @{h="B669D01F8ACD38F3C1DA286DCE55E251-DA195A29E34E02E9E4C6663CE0B8F243-8B2260B1CCE64144F6310876F94B1638" ;v="2.4.1"     },
@@ -80,7 +82,7 @@ $Log4J_Version_Hashes = @(
                             @{h="BB3CB995A7BFADB536D2B491BAF4F9C4-4CB3A0271F77C02FD2DE3144A729AB70-5824711D6C68162EB535CC4DBF7485D3" ;v="2.12.1"    },
                             @{h="BB3CB995A7BFADB536D2B491BAF4F9C4-DDF868BC458A7732EC3E63673A331D04-102CAC5B7726457244AF1F44E54FF468" ;v="2.12.2"    }, #fixed CVE-2021-(44228, 45046) for Java 7
                             @{h="BB3CB995A7BFADB536D2B491BAF4F9C4-F54D88847EBCF0E2B7C7BFE03B91B69A-5D058C91E71038ED3BA66F29A071994C" ;v="2.12.3"    }, #fixed CVE-2021-45105          for Java 7
-                            #@{h="??????????????????????????????????????????????????????????????????????????????????????????????????" ;v="2.12.4"    }, #fixed CVE-2021-44832          for Java 7
+                            @{h="BB3CB995A7BFADB536D2B491BAF4F9C4-F54D88847EBCF0E2B7C7BFE03B91B69A-909F3304825153542280D20A975D3114" ;v="2.12.4"    }, #fixed CVE-2021-44832          for Java 7
 
                             @{h="1AC815D89B2D897441B6C62C3982C044-7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.0"    },
                             @{h="1AC815D89B2D897441B6C62C3982C044-7B2CF8F2E9D85014884ADD490878A600-21F055B62C15453F0D7970A9D994CAB7" ;v="2.13.1"    },
