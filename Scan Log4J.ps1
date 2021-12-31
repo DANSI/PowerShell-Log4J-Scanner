@@ -1,6 +1,6 @@
 #
 # Author: DanSi
-# Date: 2021-12-20 Version: 1.1.0.1 beta
+# Date: 2021-12-31 Version: 1.1.0.2
 # 
 # Skript: Finds Log4J files and try to find Version of it
 #         It can also use "Workaround 3 from https://logging.apache.org/log4j/2.x/security.html
