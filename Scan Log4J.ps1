@@ -289,9 +289,11 @@ function Log4J-Jar(){
     # Detect Log4J
     $hasLog4J       = $zipFile.Entries | ?{ $_.FullName -match $Log4J_detect }
     $hasloggerClass = $zipFile.Entries | ?{ $_.FullName -like  $Log4J_LoggerClass }
-    if ($hasloggerClass -and $hasloggerClass.Count -gt 1){ $hasloggerClass=$null; Write-Warning "more then one Logger.class found!" }
-    
+        
     if ($hasLog4J){
+    
+        # Test if more then one Logger.class is in file
+        if ($hasloggerClass -and $hasloggerClass.Count -gt 1){ $hasloggerClass=$null; Write-Warning "more then one Logger.class found!" }
 
         $hasJndiLookup  = $zipFile.Entries | ?{ $_.FullName -match $Log4J_JndiLookup  } | Sort-Object LastWriteTime | Select-Object -First 1 # if more then one file, use oldest
         $hasJndiManager = $zipFile.Entries | ?{ $_.FullName -match $Log4J_JndiManager } | Sort-Object LastWriteTime | Select-Object -First 1 # if more then one file, use oldest
